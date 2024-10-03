@@ -8,6 +8,8 @@ const PLATFORM_TITLE = "Use Notifications";
 
 const NOTIFICATION_SOUND_URL = "http://localhost:8080/assets/notification.mp3";
 
+const endpoint = 'https://jsonplaceholder.typicode.com/todos/1'
+
 // Keep track of notifications we are updating
 const updatableNotifications: {
 	[id: string]: Notifications.TemplateMarkdown & { customData: { count: number } };
@@ -33,6 +35,8 @@ window.addEventListener("DOMContentLoaded", async () => {
 	await initializeWorkspacePlatform();
 
 	await initializeNotifications();
+
+	await initializeNotificationsTimer()
 });
 
 /**
@@ -85,6 +89,19 @@ async function initializeWorkspacePlatform(): Promise<void> {
 			}
 		]
 	});
+
+}
+
+async function initializeNotificationsTimer(): Promise<void> {
+	setInterval(async () => {
+		const res = await fetch(endpoint).then(e => e.json())
+		if(res) {
+			notify({
+				title: res.title,
+				body: res.id
+			})
+		}
+	}, 5000)
 }
 
 /**
@@ -421,6 +438,25 @@ function showNotificationCount(count: number): void {
 	if (btnNotificationsCenterShow) {
 		btnNotificationsCenterShow.textContent = `Show [${count}]`;
 	}
+}
+
+async function notify(params: any): Promise<void> {
+	const notification: Notifications.NotificationOptions = {
+		indicator: {
+			color: Notifications.IndicatorColor.RED,
+			text: 'Alerts'
+		},
+		title: params?.title,
+		body: params?.body,
+		toast: "transient",
+		category: "default",
+		template: "markdown",
+		id: randomUUID(),
+		platform: PLATFORM_ID
+	};
+
+	codeShowExample(notification);
+	await Notifications.create(notification);
 }
 
 /**
